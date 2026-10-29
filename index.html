@@ -1,0 +1,200 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Governors and Data Centers</title>
+<style>
+@font-face{font-family:"Suisse Works";src:url("fonts/SuisseWorks-Medium.otf") format("opentype");font-weight:500;font-display:swap}
+@font-face{font-family:"Suisse Intl";src:url("fonts/SuisseIntl-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"Suisse Intl";src:url("fonts/SuisseIntl-Medium.otf") format("opentype");font-weight:500;font-display:swap}
+@font-face{font-family:"Suisse Intl Mono";src:url("fonts/SuisseIntlMono-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+
+/* House-style graphic (after The Information's Datawrapper charts): white ground, serif headline with the TI mark at right,
+   one-line dek, highlight boxes that switch the position shown, hex map and a mono credit line.
+   Boxes run strongest to mildest: stop building (moratorium), pull incentives (tax breaks), set conditions (two boxes).
+   Each half-hexagon is filled in its party's color if that nominee backs the selected position, light gray if not stated.
+   Details appear in a hover box on desktop and below the map on phones. */
+:root{
+  --paper:#FFFFFF; --ink:#2F3538; --ink2:#6D686E; --rule:#E6E2DB; --box:#F7F5F2; --empty:#E9E6E1; --tip:#FFFFFF;
+  --dem:#2A54A3; --rep:#F32A52; --mark:#F32A52;
+  --serif:"Suisse Works",Georgia,serif;
+  --sans:"Suisse Intl","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:"Suisse Intl Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1C1F21; --ink:#F0ECE5; --ink2:#B4B0B5; --rule:#3A3F42; --box:#26292C; --empty:#3A3E41; --tip:#26292C;
+  --dem:#7F9FE6; --rep:#FF6F8A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1C1F21; --ink:#F0ECE5; --ink2:#B4B0B5; --rule:#3A3F42; --box:#26292C; --empty:#3A3E41; --tip:#26292C;
+  --dem:#7F9FE6; --rep:#FF6F8A; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:28px 20px 32px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:20px}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3.4vw,28px);line-height:1.1;margin:0;text-wrap:balance}
+.mark{width:auto;height:24px;flex:none;fill:var(--mark)}
+
+.tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.box{display:block;width:100%;height:100%;text-align:left;font:inherit;color:inherit;background:var(--box);border:1px solid var(--box);border-top:3px solid var(--rule);padding:8px 12px 9px;cursor:pointer;border-radius:0}
+.box .bl{display:block;font-weight:500;font-size:15px;line-height:1.25}
+.box:hover{border-top-color:var(--ink2)}
+.box[aria-pressed="true"]{background:var(--mark);color:#FFFFFF;border-color:var(--mark)}
+.box:focus-visible,.st:focus-visible,.close:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.key{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin:16px 0 0;font-size:13px;color:var(--ink2)}
+.key .q{color:var(--ink);font-weight:500;flex-basis:100%;font-size:15px}
+.k{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;display:inline-block;flex:none}
+
+.mapwrap{position:relative;margin-top:6px}
+#map{width:100%;height:auto;display:block;touch-action:manipulation}
+.st{cursor:pointer}
+.st:focus:not(:focus-visible){outline:none}
+.st .half{stroke:var(--paper);stroke-width:2.4}
+.st .full{fill:none;stroke:none;pointer-events:all}
+.st:hover .full{stroke:var(--ink2);stroke-width:2}
+.st.on .full{stroke:var(--ink);stroke-width:3}
+.st.off{cursor:default}
+.st.off .full{stroke:var(--rule);stroke-width:1}
+.pill{fill:var(--paper);opacity:.94;pointer-events:none}
+.lbl{font:500 13px var(--sans);fill:var(--ink);pointer-events:none}
+.lbl.muted{fill:var(--ink2);font-weight:400}
+
+.tip{position:absolute;z-index:5;width:280px;background:var(--tip);border:1px solid var(--rule);border-top:2px solid var(--ink);box-shadow:0 6px 24px rgba(47,53,56,.12);padding:12px 14px;font-size:13px;line-height:1.45;pointer-events:none}
+.tip[hidden]{display:none}
+.tip.pinned{pointer-events:auto}
+.tip h3{font:500 15px var(--sans);margin:0 28px 0 0}
+.tip .c{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)}
+.tip .c:first-of-type{border-top:0;padding-top:0}
+.tip .nm{font-weight:500;display:flex;align-items:center;gap:7px}
+.tip .pt{font-weight:400;color:var(--ink2)}
+.tip p{margin:4px 0 0}
+.tip .muted{color:var(--ink2)}
+.close{display:none;position:absolute;top:6px;right:6px;border:0;background:transparent;color:var(--ink2);font:400 20px var(--sans);cursor:pointer;line-height:1;padding:4px 8px}
+.tip.pinned .close{display:block}
+
+.foot{display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:12px;color:var(--ink2)}
+.foot p{margin:0;max-width:60ch}
+.foot .src{font-family:var(--mono);font-size:11px;align-self:flex-end;text-align:right;max-width:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:700px){
+  .wrap{padding:20px 16px 24px}
+  .head{align-items:flex-start}
+  .mark{margin-top:4px}
+  .tiers{grid-template-columns:1fr 1fr}
+  .tip,.tip.pinned{position:relative;left:auto!important;top:auto!important;width:auto;box-shadow:none;margin-top:8px;pointer-events:auto}
+  .tip .close{display:block}
+  .foot .src{align-self:flex-start;text-align:left}
+}
+@media (max-width:420px){.tiers{gap:10px 8px}.box{padding:7px 9px 8px}.box .bl{font-size:13px}}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Where Governor Candidates Stand on Data Centers</h1>
+    <svg class="mark" viewBox="82.8 56 122.2 177.2" role="img" aria-label="The Information"><path d="M82.8,233.2h122.2v-42.4h-122.2v42.4Z"/><path d="M204.9,98.4v-42.4h-122.2v42.4h38.3c.4,0,.8.3.8.8v60.5c0,.9.4,1.7,1.2,2l42.8,24.6v-87.3c0-.4.3-.8.8-.8h38.3Z"/></svg>
+  </div>
+  <div class="tiers" id="tiers"></div>
+  <div class="key" id="key" aria-live="polite"></div>
+  <div class="mapwrap" id="mapwrap">
+    <svg id="map" role="group" aria-label="Hex map of the 36 states with governor's races"></svg>
+    <div class="tip" id="tip" hidden aria-live="polite"><button class="close" id="close" aria-label="Close">×</button><div id="tbody"></div></div>
+  </div>
+  <div class="foot">
+    <p class="src">Map: Shane Burke • Source: The Information reporting</p>
+  </div>
+  <table class="sr" id="tbl"><caption>Each nominee's positions</caption><thead><tr><th scope="col">State</th><th scope="col">Nominee</th><th scope="col">Party</th></tr></thead><tbody></tbody></table>
+</div>
+
+<script type="application/json" id="govs-data">{"asOf":"2026-10-15","levels":[{"k":"mora","label":"Moratorium or pause","g":"mora"},{"k":"guardrail","label":"Allows with conditions","g":"restrict"},{"k":"rest","label":"Rules out big projects, no moratorium","g":"restrict"},{"k":"other","label":"Conditions that don't fit the scale","g":"restrict"},{"k":"open","label":"Open, no conditions stated","g":"none"},{"k":"pro","label":"Pro-build","g":"none"},{"k":"none","label":"No position found","g":"none"}],"groups":[{"g":"mora","label":"Moratorium or pause"},{"g":"restrict","label":"Restrictions"},{"g":"none","label":"None"}],"layout":[["AK",0,0],["ME",0,10],["VT",1,9],["NH",1,10],["WA",2,0],["ID",2,1],["MT",2,2],["ND",2,3],["MN",2,4],["WI",2,5],["MI",2,7],["NY",2,9],["MA",2,10],["RI",2,11],["OR",3,0],["NV",3,1],["WY",3,2],["SD",3,3],["IA",3,4],["IL",3,5],["IN",3,6],["OH",3,7],["PA",3,8],["NJ",3,9],["CT",3,10],["CA",4,0],["UT",4,1],["CO",4,2],["NE",4,3],["MO",4,4],["KY",4,5],["WV",4,6],["VA",4,7],["MD",4,8],["DE",4,9],["AZ",5,1],["NM",5,2],["KS",5,3],["AR",5,4],["TN",5,5],["NC",5,6],["SC",5,7],["TX",6,2],["OK",6,3],["LA",6,4],["MS",6,5],["AL",6,6],["GA",6,7],["HI",7,0],["FL",7,7]],"races":[{"abbr":"AL","state":"Alabama","rating":"Solid R","cands":[{"n":"Doug Jones","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","tra":"Yes","env":"Yes"},"src":"AL.com, AL reporter"},{"n":"Tommy Tuberville","p":"R","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"sup":"Yes","rate":"Yes","inc":"Yes"},"src":""}]},{"abbr":"AK","state":"Alaska","rating":"Toss-up","cands":[{"n":"Jonathan Kreiss-Tomkins","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes","loc":"Yes"},"src":""},{"n":"Bernadette Wilson","p":"R","inc":false,"lv":"rest","incf":"","con":"","fl":{"env":"Yes"},"src":""}]},{"abbr":"AZ","state":"Arizona","rating":"Lean D","cands":[{"n":"Katie Hobbs","p":"D","inc":true,"lv":"guardrail","incf":"end/pause","con":"","fl":{"mor":"No","inc":"Yes","env":"Yes"},"src":""},{"n":"Andy Biggs","p":"R","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"rate":"Yes","env":"Yes","loc":"Yes","inc":"Yes"},"src":""}]},{"abbr":"AR","state":"Arkansas","rating":"Solid R","cands":[{"n":"Fredrick Love","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes"},"src":""},{"n":"Sarah Huckabee Sanders","p":"R","inc":true,"lv":"pro","incf":"","con":"","fl":{"mor":"No","sup":"Yes","rate":"Yes","env":"Yes"},"src":""}]},{"abbr":"CA","state":"California","rating":"Solid D","cands":[{"n":"Xavier Becerra","p":"D","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"sup":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Steve Hilton","p":"R","inc":false,"lv":"none","incf":"","con":"","fl":{"rate":"Yes","env":"Yes"},"src":""}]},{"abbr":"CO","state":"Colorado","rating":"Solid D","cands":[{"n":"Phil Weiser","p":"D","inc":false,"lv":"guardrail","incf":"conditions","con":"","fl":{"mor":"No","rate":"Yes","env":"Yes","cond":"Yes"},"src":""},{"n":"Victor Marx","p":"R","inc":false,"lv":"pro","incf":"","con":"","fl":{"sup":"Yes"},"src":""}]},{"abbr":"CT","state":"Connecticut","rating":"Solid D","cands":[{"n":"Ned Lamont","p":"D","inc":true,"lv":"rest","incf":"","con":"","fl":{"rate":"Yes"},"src":""},{"n":"Ryan Fazio","p":"R","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"loc":"Yes","inc":"Yes"},"src":""}]},{"abbr":"FL","state":"Florida","rating":"Likely R","cands":[{"n":"David Jolly","p":"D","inc":false,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","env":"Yes","inc":"Yes","rate":"Yes"},"src":""},{"n":"Byron Donalds","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"rate":"Yes","env":"Yes","loc":"Yes"},"src":""}]},{"abbr":"GA","state":"Georgia","rating":"Toss-up","cands":[{"n":"Keisha Lance Bottoms","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Rick Jackson","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"mor":"No","loc":"Yes"},"src":""}]},{"abbr":"HI","state":"Hawaii","rating":"Solid D","cands":[{"n":"Josh Green","p":"D","inc":true,"lv":"none","incf":"","con":"","fl":{},"src":""},{"n":"Gary Cordery","p":"R","inc":false,"lv":"none","incf":"","con":"","fl":{},"src":""}]},{"abbr":"ID","state":"Idaho","rating":"Solid R","cands":[{"n":"Terri Pickens","p":"D","inc":false,"lv":"guardrail","incf":"","con":"","fl":{},"src":""},{"n":"Brad Little","p":"R","inc":true,"lv":"guardrail","incf":"","con":"","fl":{"sup":"Yes","env":"Yes","rate":"Yes"},"src":""}]},{"abbr":"IL","state":"Illinois","rating":"Solid D","cands":[{"n":"JB Pritzker","p":"D","inc":true,"lv":"guardrail","incf":"end/pause","con":"","fl":{"rate":"Yes","inc":"Yes","env":"Yes"},"src":""},{"n":"Darren Bailey","p":"R","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"rate":"Yes","inc":"Yes"},"src":""}]},{"abbr":"IA","state":"Iowa","rating":"Lean D","cands":[{"n":"Rob Sand","p":"D","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"mor":"No","rate":"Yes","tra":"Yes","inc":"Yes"},"src":""},{"n":"Zach Lahn","p":"R","inc":false,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","inc":"Yes"},"src":""}]},{"abbr":"KS","state":"Kansas","rating":"Lean R","cands":[{"n":"Cindy Holscher","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Ty Masterson","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"sup":"Yes","rate":"Yes","env":"Yes"},"src":""}]},{"abbr":"ME","state":"Maine","rating":"Solid D","cands":[{"n":"Hannah Pingree","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes","env":"Yes","loc":"Yes"},"src":""},{"n":"Robert Charles","p":"R","inc":false,"lv":"open","incf":"","con":"","fl":{"env":"Yes"},"src":""}]},{"abbr":"MD","state":"Maryland","rating":"Solid D","cands":[{"n":"Wes Moore","p":"D","inc":true,"lv":"guardrail","incf":"end/pause","con":"","fl":{"tra":"Yes","inc":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Dan Cox","p":"R","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","env":"Yes"},"src":""}]},{"abbr":"MA","state":"Massachusetts","rating":"Solid D","cands":[{"n":"Maura Healey","p":"D","inc":true,"lv":"guardrail","incf":"end/pause","con":"","fl":{"sup":"Yes","rate":"Yes","env":"Yes","loc":"Yes","inc":"Yes"},"src":""},{"n":"Mike Minogue","p":"R","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes"},"src":""}]},{"abbr":"MI","state":"Michigan","rating":"Lean D","cands":[{"n":"Jocelyn Benson","p":"D","inc":false,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","rate":"Yes","inc":"Yes"},"src":""},{"n":"John James","p":"R","inc":false,"lv":"mora","incf":"","con":"","fl":{"sup":"Yes","loc":"Yes","mor":"Yes"},"src":"WDIV, Oct."}]},{"abbr":"MN","state":"Minnesota","rating":"Solid D","cands":[{"n":"Amy Klobuchar","p":"D","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"env":"Yes","tra":"Yes","loc":"Yes"},"src":""},{"n":"Lisa Demuth","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"sup":"Yes","rate":"Yes"},"src":""}]},{"abbr":"NE","state":"Nebraska","rating":"Solid R","cands":[{"n":"Lynne Walz","p":"D","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"loc":"Yes"},"src":""},{"n":"Jim Pillen","p":"R","inc":true,"lv":"guardrail","incf":"end/pause","con":"","fl":{"sup":"Yes","rate":"Yes","inc":"Yes","env":"Yes"},"src":""}]},{"abbr":"NV","state":"Nevada","rating":"Toss-up","cands":[{"n":"Aaron Ford","p":"D","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"rate":"Yes","inc":"Yes","env":"Yes"},"src":""},{"n":"Joe Lombardo","p":"R","inc":true,"lv":"guardrail","incf":"","con":"","fl":{"sup":"Yes","rate":"Yes","env":"Yes"},"src":""}]},{"abbr":"NH","state":"New Hampshire","rating":"Likely R","cands":[{"n":"Cinde Warmington","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","loc":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Kelly Ayotte","p":"R","inc":true,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes","env":"Yes"},"src":"NHPR, Oct."}]},{"abbr":"NM","state":"New Mexico","rating":"Solid D","cands":[{"n":"Deb Haaland","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","env":"Yes","tra":"Yes","rate":"Yes"},"src":""},{"n":"Gregg Hull","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"mor":"No","rate":"Yes","env":"Yes","loc":"Yes"},"src":""}]},{"abbr":"NY","state":"New York","rating":"Solid D","cands":[{"n":"Kathy Hochul","p":"D","inc":true,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","inc":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Bruce Blakeman","p":"R","inc":false,"lv":"pro","incf":"","con":"","fl":{"mor":"No","sup":"Yes"},"src":""}]},{"abbr":"OH","state":"Ohio","rating":"Toss-up","cands":[{"n":"Amy Acton","p":"D","inc":false,"lv":"mora","incf":"conditions","con":"","fl":{"mor":"Yes","rate":"Yes","env":"Yes","tra":"Yes","cond":"Yes"},"src":""},{"n":"Vivek Ramaswamy","p":"R","inc":false,"lv":"other","incf":"conditions","con":"","fl":{"rate":"Yes","env":"Yes","cond":"Yes"},"src":""}]},{"abbr":"OK","state":"Oklahoma","rating":"Solid R","cands":[{"n":"Cyndi Munson","p":"D","inc":false,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","env":"Yes","inc":"Yes","rate":"Yes"},"src":""},{"n":"Mike Mazzei","p":"R","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"rate":"Yes","loc":"Yes","inc":"Yes"},"src":""}]},{"abbr":"OR","state":"Oregon","rating":"Likely D","cands":[{"n":"Tina Kotek","p":"D","inc":true,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","inc":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Christine Drazan","p":"R","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes"},"src":""}]},{"abbr":"PA","state":"Pennsylvania","rating":"Solid D","cands":[{"n":"Josh Shapiro","p":"D","inc":true,"lv":"guardrail","incf":"conditions","con":"","fl":{"env":"Yes","loc":"Yes","cond":"Yes","rate":"Yes"},"src":""},{"n":"Stacy Garrity","p":"R","inc":false,"lv":"guardrail","incf":"criticizes only","con":"","fl":{"env":"Yes","rate":"Yes"},"src":""}]},{"abbr":"RI","state":"Rhode Island","rating":"Solid D","cands":[{"n":"Helena Foulkes","p":"D","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"rate":"Yes"},"src":""},{"n":"Aaron Guckian","p":"R","inc":false,"lv":"open","incf":"","con":"","fl":{},"src":""}]},{"abbr":"SC","state":"South Carolina","rating":"Solid R","cands":[{"n":"Jermaine Johnson","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","loc":"Yes","rate":"Yes"},"src":""},{"n":"Alan Wilson","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"mor":"No","rate":"Yes","loc":"Yes","env":"Yes"},"src":""}]},{"abbr":"SD","state":"South Dakota","rating":"Solid R","cands":[{"n":"Dan Ahlers","p":"D","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"loc":"Yes"},"src":""},{"n":"Larry Rhoden","p":"R","inc":true,"lv":"guardrail","incf":"","con":"","fl":{"rate":"Yes","env":"Yes","loc":"Yes","tra":"Yes"},"src":""}]},{"abbr":"TN","state":"Tennessee","rating":"Solid R","cands":[{"n":"Jerri Green","p":"D","inc":false,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","inc":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Marsha Blackburn","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"loc":"Yes","rate":"Yes","env":"Yes","tra":"Yes"},"src":"WTVC, Sept."}]},{"abbr":"TX","state":"Texas","rating":"Likely R","cands":[{"n":"Gina Hinojosa","p":"D","inc":false,"lv":"mora","incf":"end/pause","con":"","fl":{"mor":"Yes","tra":"Yes","inc":"Yes","rate":"Yes","env":"Yes"},"src":""},{"n":"Greg Abbott","p":"R","inc":true,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes","rate":"Yes","env":"Yes"},"src":"Texas Tribune, Sept."}]},{"abbr":"VT","state":"Vermont","rating":"Solid R","cands":[{"n":"Amanda Janoo","p":"D","inc":false,"lv":"mora","incf":"","con":"","fl":{"mor":"Yes"},"src":""},{"n":"Phil Scott","p":"R","inc":true,"lv":"guardrail","incf":"","con":"","fl":{"mor":"No"},"src":""}]},{"abbr":"WI","state":"Wisconsin","rating":"Toss-up","cands":[{"n":"David Crowley","p":"D","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"mor":"No","env":"Yes","loc":"Yes","tra":"Yes","cond":"Yes","inc":"Yes","rate":"Yes"},"src":"WisPolitics, Oct."},{"n":"Tom Tiffany","p":"R","inc":false,"lv":"guardrail","incf":"end/pause","con":"","fl":{"rate":"Yes","inc":"Yes","env":"Yes"},"src":"The Center Square, Oct."}]},{"abbr":"WY","state":"Wyoming","rating":"Solid R","cands":[{"n":"Kenneth Casner","p":"D","inc":false,"lv":"none","incf":"","con":"","fl":{},"src":""},{"n":"Eric Barlow","p":"R","inc":false,"lv":"guardrail","incf":"","con":"","fl":{"sup":"Yes","loc":"Yes","rate":"Yes","env":"Yes"},"src":"Cowboy State Daily, Oct."}]}]}</script>
+<script>
+(function(){
+let D;try{D=JSON.parse(document.getElementById("govs-data").textContent)}catch(e){document.getElementById("map").outerHTML="<p>The map data failed to load.</p>";return}
+const svg=document.getElementById("map"),wrap=document.getElementById("mapwrap"),tip=document.getElementById("tip"),tbody=document.getElementById("tbody"),NS="http://www.w3.org/2000/svg";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const LV=Object.fromEntries(D.levels.map(l=>[l.k,l]));
+const races=Object.fromEntries(D.races.map(r=>[r.abbr,r]));
+const all=D.races.flatMap(r=>r.cands);
+const PN={D:"Democrat",R:"Republican"};
+// Positions, strongest first. Moratorium uses the stance level so it always matches the moratorium group; the rest use the yes/no flags.
+const TIERS=[
+  {h:"Stop building",views:[{k:"mor",label:"Moratorium or pause",q:"Backs a moratorium or pause on new data centers",yes:c=>LV[c.lv].g==="mora"}]},
+  {h:"Pull incentives",views:[{k:"inc",label:"Ending tax breaks",q:"Would end or pause data-center tax breaks",no:"No/Not stated/Not applicable",yes:c=>c.fl.inc==="Yes"}]},
+  {h:"Set conditions",views:[
+    {k:"rate",label:"Ratepayer protections",q:"Wants data centers to cover their own power costs",yes:c=>c.fl.rate==="Yes"},
+    {k:"env",label:"Water and environment",q:"Calls for water, energy-use or environmental limits",yes:c=>c.fl.env==="Yes"}]}];
+const VIEWS=TIERS.flatMap(t=>t.views);
+const NO=v=>v.no||"No/Not stated";
+const ans=(v,c)=>v.yes(c)?"Yes":NO(v);
+let view=VIEWS[0],sel=null;
+const fill=(c,p)=>view.yes(c)?`var(--${p==="D"?"dem":"rep"})`:"var(--empty)";
+
+// highlight boxes
+const tiers=document.getElementById("tiers");
+for(const v of VIEWS){
+    const b=document.createElement("button");b.type="button";b.className="box";b.dataset.k=v.k;
+    b.innerHTML=`<span class="bl">${esc(v.label)}</span>`;
+    b.onclick=()=>{view=v;render()};tiers.appendChild(b)}
+
+// map
+const R=34,W=Math.sqrt(3)*R;
+const pos=D.layout.map(([a,r,c])=>({a,x:W*(c+.5*(r%2))+W/2,y:R*1.5*r+R}));
+svg.setAttribute("viewBox",`0 0 ${Math.max(...pos.map(p=>p.x))+W/2} ${Math.max(...pos.map(p=>p.y))+R}`);
+const el=(n,at,p)=>{const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);(p||svg).appendChild(e);return e};
+const hx=(cx,cy)=>[[cx,cy-R],[cx+W/2,cy-R/2],[cx+W/2,cy+R/2],[cx,cy+R],[cx-W/2,cy+R/2],[cx-W/2,cy-R/2]];
+const pts=a=>a.map(p=>p.join(",")).join(" ");
+for(const p of pos){
+  const r=races[p.a],g=el("g",{class:"st"+(r?"":" off"),"data-a":p.a});
+  if(r){
+    g.setAttribute("tabindex","0");g.setAttribute("role","button");
+    el("polygon",{class:"half hD",points:pts([[p.x,p.y-R],[p.x-W/2,p.y-R/2],[p.x-W/2,p.y+R/2],[p.x,p.y+R]])},g);
+    el("polygon",{class:"half hR",points:pts([[p.x,p.y-R],[p.x+W/2,p.y-R/2],[p.x+W/2,p.y+R/2],[p.x,p.y+R]])},g);
+    el("polygon",{class:"full",points:pts(hx(p.x,p.y))},g);
+    el("rect",{class:"pill",x:p.x-15,y:p.y-9,width:30,height:18},g);
+    // mouse: hover previews, click pins. touch and keyboard: tap/Enter pins.
+    g.addEventListener("pointerenter",e=>{if(e.pointerType==="mouse"&&!sel)show(p.a)});
+    g.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"&&!sel)hide()});
+    g.addEventListener("click",()=>select(p.a));
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(p.a)}});
+  }else el("polygon",{class:"full",points:pts(hx(p.x,p.y))},g);
+  const t=el("text",{class:"lbl"+(r?"":" muted"),x:p.x,y:p.y,"text-anchor":"middle",dy:"0.35em"},g);t.textContent=p.a}
+
+// hover box
+function candHtml(c){
+  return`<div class="c"><div class="nm"><span class="sw" style="background:${fill(c,c.p)}"></span>${esc(c.n)} <span class="pt">${c.p}${c.inc?", incumbent":""}</span></div>`+
+    `</div>`}
+function place(a){
+  if(matchMedia("(max-width:700px)").matches){tip.style.left=tip.style.top="";return}
+  const g=svg.querySelector(`.st[data-a="${a}"]`).getBoundingClientRect(),w=wrap.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
+  let x=g.right-w.left+10;if(x+tw>w.width)x=g.left-w.left-tw-10;if(x<0)x=Math.max(0,(w.width-tw)/2);
+  let y=g.top-w.top-10;y=Math.max(0,Math.min(y,w.height-th));
+  tip.style.left=x+"px";tip.style.top=y+"px"}
+function show(a){const r=races[a];tbody.innerHTML=`<h3>${esc(r.state)}</h3>`+r.cands.map(candHtml).join("");tip.hidden=false;place(a)}
+function hide(){tip.hidden=true;tip.classList.remove("pinned")}
+function select(a){sel=sel===a?null:a;svg.querySelectorAll(".st.on").forEach(q=>q.classList.remove("on"));
+  if(sel){svg.querySelector(`.st[data-a="${sel}"]`).classList.add("on");show(sel);tip.classList.add("pinned")}else hide()}
+document.getElementById("close").onclick=()=>{if(sel)select(sel)};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sel)select(sel)});
+document.addEventListener("click",e=>{if(sel&&!e.target.closest(".st")&&!e.target.closest(".tip"))select(sel)});
+
+// screen-reader table: every nominee's answer to every position
+const head=document.querySelector("#tbl thead tr");
+for(const v of VIEWS){const th=document.createElement("th");th.scope="col";th.textContent=v.label;head.appendChild(th)}
+const tb=document.querySelector("#tbl tbody");
+for(const r of D.races)for(const c of r.cands){const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${esc(r.state)}</td><td>${esc(c.n)}${c.inc?" (incumbent)":""}</td><td>${PN[c.p]}</td>`+VIEWS.map(v=>`<td>${ans(v,c)}</td>`).join("");tb.appendChild(tr)}
+
+function render(){
+  tiers.querySelectorAll(".box").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===view.k)));
+  svg.querySelectorAll(".st:not(.off)").forEach(g=>{const r=races[g.dataset.a];
+    g.querySelector(".hD").style.fill=fill(r.cands[0],"D");g.querySelector(".hR").style.fill=fill(r.cands[1],"R");
+    g.setAttribute("aria-label",`${r.state}: `+r.cands.map(c=>`${c.n} (${c.p}), ${ans(view,c).toLowerCase()}`).join("; "))});
+  const y=all.filter(view.yes).length;
+  document.getElementById("key").innerHTML=`<span class="q">${esc(view.q)}</span>`+
+    `<span class="k"><span class="sw" style="background:var(--dem)"></span><span class="sw" style="background:var(--rep)"></span>Yes (${y} candidates)</span>`+
+    `<span class="k"><span class="sw" style="background:var(--empty)"></span>${NO(view)} (${all.length-y})</span>`+
+    `<span class="k"><span class="sw" style="border:1px solid var(--rule)"></span>No race</span>`;
+  if(!tip.hidden&&sel)show(sel)}
+render();
+})();
+</script>
