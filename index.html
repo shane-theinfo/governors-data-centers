@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Governors and Data Centers</title>
@@ -43,7 +46,11 @@ h1{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3.4vw,28px);lin
 .key{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin:16px 0 0;font-size:13px;color:var(--ink2)}
 .key .q{color:var(--ink);font-weight:500;flex-basis:100%;font-size:15px}
 .k{display:inline-flex;align-items:center;gap:6px}
+.k .ps{display:none}
+.k .nd{color:var(--dem);font-weight:500}.k .nr{color:var(--rep);font-weight:500}
 .sw{width:12px;height:12px;display:inline-block;flex:none}
+.sw.sl{width:16px;height:16px;color:var(--paper);font-size:11px;font-weight:500;line-height:16px;text-align:center}
+.k .sl+.sl{margin-left:-4px}
 
 .mapwrap{position:relative;margin-top:6px}
 #map{width:100%;height:auto;display:block;touch-action:manipulation}
@@ -78,6 +85,7 @@ h1{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3.4vw,28px);lin
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 @media (max-width:700px){
+  .k .pl{display:none}.k .ps{display:inline}
   .wrap{padding:20px 16px 24px}
   .head{align-items:flex-start}
   .mark{margin-top:4px}
@@ -88,6 +96,8 @@ h1{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3.4vw,28px);lin
 }
 @media (max-width:420px){.tiers{gap:10px 8px}.box{padding:7px 9px 8px}.box .bl{font-size:13px}}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <div class="head">
@@ -101,7 +111,7 @@ h1{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3.4vw,28px);lin
     <div class="tip" id="tip" hidden aria-live="polite"><button class="close" id="close" aria-label="Close">×</button><div id="tbody"></div></div>
   </div>
   <div class="foot">
-    <p class="src">Map: Shane Burke • Source: The Information reporting</p>
+    <p class="src">Note: Based on analysis of platforms and statements. • Map: Shane Burke • Source: The Information reporting</p>
   </div>
   <table class="sr" id="tbl"><caption>Each nominee's positions</caption><thead><tr><th scope="col">State</th><th scope="col">Nominee</th><th scope="col">Party</th></tr></thead><tbody></tbody></table>
 </div>
@@ -191,10 +201,12 @@ function render(){
     g.setAttribute("aria-label",`${r.state}: `+r.cands.map(c=>`${c.n} (${c.p}), ${ans(view,c).toLowerCase()}`).join("; "))});
   const y=all.filter(view.yes).length;
   document.getElementById("key").innerHTML=`<span class="q">${esc(view.q)}</span>`+
-    `<span class="k"><span class="sw" style="background:var(--dem)"></span><span class="sw" style="background:var(--rep)"></span>Yes (${y} candidates)</span>`+
-    `<span class="k"><span class="sw" style="background:var(--empty)"></span>${NO(view)} (${all.length-y})</span>`+
+    `<span class="k"><span class="sw sl" aria-hidden="true" style="background:var(--dem)">D</span><span class="sw sl" aria-hidden="true" style="background:var(--rep)">R</span><span>Yes – ${y}</span></span>`+
+    `<span class="k"><span class="sw" style="background:var(--empty)"></span>${NO(view)} – ${all.length-y}</span>`+
     `<span class="k"><span class="sw" style="border:1px solid var(--rule)"></span>No race</span>`;
   if(!tip.hidden&&sel)show(sel)}
 render();
 })();
 </script>
+</body>
+</html>
