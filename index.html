@@ -185,7 +185,7 @@ function select(a){sel=sel===a?null:a;svg.querySelectorAll(".st.on").forEach(q=>
   if(sel){svg.querySelector(`.st[data-a="${sel}"]`).classList.add("on");show(sel);tip.classList.add("pinned")}else hide()}
 document.getElementById("close").onclick=()=>{if(sel)select(sel)};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sel)select(sel)});
-document.addEventListener("click",e=>{if(sel&&!e.target.closest(".st")&&!e.target.closest(".tip"))select(sel)});
+document.addEventListener("click",e=>{if(sel&&!e.target.closest(".st")&&!e.target.closest(".tip")&&!e.target.closest(".box"))select(sel)});
 
 // screen-reader table: every nominee's answer to every position
 const head=document.querySelector("#tbl thead tr");
